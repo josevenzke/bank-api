@@ -72,7 +72,7 @@ def deposito(request, id):
     valor = request.POST.get("valor")
     if not is_decimal(valor):
         return Response(
-            {"valor": "Make sure valor exists and is numeric"},
+            {"valor": "Valor tem que existir e ser numérico"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -97,14 +97,14 @@ def saque(request, id):
     valor = request.POST.get("valor")
     if not is_decimal(valor):
         return Response(
-            {"valor": "Make sure valor exists and is numeric"},
+            {"valor": "Valor tem que existir e ser numérico"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     conta = get_object_or_404(Conta, pk=id)
     if float(valor) > conta.saldo:
         return Response(
-            {"valor": "You do not have enough saldo"},
+            {"valor": "A conta não tem saldo suficiente"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
