@@ -1,5 +1,6 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 import decimal
 import datetime
 from .models import Pessoa, Conta, Transacao
@@ -19,10 +20,10 @@ def pessoas(request):
         serializer_pessoa = PessoaSerializer(data=request.data)
         if serializer_pessoa.is_valid():
             serializer_pessoa.save()
-            return Response({"pessoa": serializer_pessoa.data})
+            return Response(serializer_pessoa.data,status=status.HTTP_201_CREATED)
 
         else:
-            return Response([serializer_pessoa.errors], status=400)
+            return Response(serializer_pessoa.errors, status=400)
 
     pessoas = Pessoa.objects.all()
     pessoas_serialized = PessoaSerializer(pessoas, many=True)
@@ -42,10 +43,10 @@ def contas(request):
         serializer_conta = ContaSerializer(data=request.data)
         if serializer_conta.is_valid():
             serializer_conta.save()
-            return Response({"conta": serializer_conta.data})
+            return Response(serializer_conta.data,status=status.HTTP_201_CREATED)
 
         else:
-            return Response([serializer_conta.errors], status=400)
+            return Response(serializer_conta.errors, status=400)
 
     contas = Conta.objects.all()
     contas_serialized = ContaSerializer(contas, many=True)
@@ -88,7 +89,16 @@ def saque(request, id):
     if float(valor) > conta.saldo:
         return Response({"valor": "You do not have enough saldo"})
 
+    transacoes = Transacao.objects.filter(conta_id=id,dataTransacao__date=datetime.datetime.today().strftime('%Y-%m-%d')).values_list()
+    gasto_diario = 0
+    for transacao in transacoes:
+         gasto_diario += transacao[1]
+
     valor = decimal.Decimal(valor)
+
+    if (gasto_diario+valor) > conta.limiteSaqueDiario:
+        return Response({"limiteSaqueDiario": f"Essa operação excedera o limite de saque diário desta conta, saque hoje:{gasto_diario} e limite de saque:{conta.limiteSaqueDiario}"})
+    
     conta.saldo -= valor
     transacao = Transacao(conta=conta, valor=valor)
     conta.save()
@@ -134,7 +144,7 @@ def transacoes(request, id):
             data_final = datetime.datetime.now()
         try:
             transacao = Transacao.objects.filter(
-                dataTransacao__gte=data_inicial, dataTransacao__lte=data_final
+                conta_id=id,dataTransacao__gte=data_inicial, dataTransacao__lte=data_final
             )
         except Exception as e:
             return Response({"data": e})
