@@ -11,9 +11,9 @@ class PessoaSerializer(serializers.ModelSerializer):
 
     def validate_cpf(self, cpf):
         if not cpf.isdecimal():
-            raise ValidationError("CPF value should include only numbers")
+            raise ValidationError("CPF deve conter apenas números")
         if len(cpf) != 11:
-            raise ValidationError(f"CPF length should be 11 not {len(cpf)}")
+            raise ValidationError(f"CPF deve conter 11 e não {len(cpf)} dígitos")
         return cpf
 
 
@@ -21,6 +21,7 @@ class ContaSerializer(serializers.ModelSerializer):
     pessoa = serializers.SlugRelatedField(
         queryset=Pessoa.objects.all(), slug_field="id"
     )
+    flagAtivo = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Conta
