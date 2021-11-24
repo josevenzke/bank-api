@@ -22,5 +22,5 @@ class Conta(models.Model):
 
 class Transacao(models.Model):
     valor = models.DecimalField(max_digits=11, decimal_places=2)
-    dataTransacao = models.DateTimeField()
+    dataTransacao = models.DateTimeField(auto_now_add=True)
     conta = models.ForeignKey(Conta, on_delete=CASCADE)
